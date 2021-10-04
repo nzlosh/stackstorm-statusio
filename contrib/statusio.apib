@@ -1,0 +1,2030 @@
+FORMAT: 1A
+HOST: https://api.status.io/v2
+
+# Status.io API v2
+
+Welcome to the official status.io API. We built this API to help you integrate your existing tools with your status page.
+
+If you're interested in automating your status page, you're at the right place :-]
+
+
+
+
+## Live Sandbox
+
+Sign in to your GitHub, Twitter or Apiary account to test and debug each API call using the Traffic Inspector.
+
+**Caution:** These are real API calls and will modify your status page. We recommend that you create another account at [Status.io](https://status.io) for testing purposes.
+
+
+# Best Practices 
+
+## Authentication
+
+Include **x-api-id** and **x-api-key** in the header of every request. 
+
+View your API credentials by clicking the API tab in the Dashboard.
+
+**Note:** Each team member has their own unique API credentials.
+
+
+## Error Handling
+
+Every request returns a status element. Check the **status.error** value for *yes* or *no*.
+
+Error messages are available in **status.message**.
+
+### Success Example
+
+                  
+
+                   {"status": {
+                       "error": "no",
+                       "message": "OK"
+                      }
+                    }
+                  
+### Fail Example
+
+                  
+
+                   {"status": {
+                       "error": "yes",
+                       "message": "Authentication failed"
+                      }
+                    }
+
+### Invalid URLs
+
+If an invalid URL or method is called, the API will respond with a *Forbidden* error.
+
+### Validation Error
+
+If the input parameters are incorrect types, the API will respond with a *Bad Request* error.
+
+
+## Data Format
+
+We currently utilize JSON for all requests and responses. Include *application/json* in the *Content-Type* header.
+
+
+## Dates and Times
+
+All timestamps are in UTC. Custom time zone settings are applied automatically for users viewing the status page.
+
+
+## Use Caching
+
+We recommend that you do all API requests on the server side, and if possible cache them. If you get any substantial traffic, you do not want to call the API each time you get a page hit, since this may cause your connection to be throttled faster than expected. In general, whenever you can cache data, do so.
+
+
+## Use Common Sense
+
+Should be simple enough. For example, don't check for the status of a component every other second. The highest resolution is one minute. Checking more often than that won't give you much of an advantage and will likely cause your connection to be throttled.
+
+Excessive repeated requests will be blocked. For instance, don't repeatedly update the status of a component that is operational. Only send status updates when the actual status changes.
+
+When bulk-submitting URLs, for cases such as adding subscribers, make sure you wait 1 second between consecutive requests.
+
+
+## The Internet is unreliable
+
+Networks in general are unreliable, and particularly one as large and complex as the Internet. Your application should not assume it will get an answer. There may be timeouts.
+
+
+## Client Libraries
+
+Go - https://github.com/statusio/statusio-go
+
+Node.js - https://github.com/statusio/statusio-node
+
+PHP - https://github.com/statusio/statusio-php
+
+Python - https://github.com/statusio/statusio-python
+
+Ruby - https://github.com/statusio/statusio-ruby
+
+Rust - https://github.com/SecurityInsanity/statusio (Unofficial library. Created and maintained by a 3rd party.)
+
+## Community
+
+Did you develop a library or plugin that works with the status.io API? You rock! Please tell us about it.
+
+
+## Support and Feedback
+
+We're here to help. Let us know if you run into any issues or have ideas for improvement. Reach the status.io team at hello@status.io.
+
+
+## Security
+
+We're fans of responsible disclosure. Contact the status.io security team at security@status.io.
+
+Please encrypt sensitive data with our [PGP key](https://status.io/public_key.txt). 
+
+
+
+
+# Group Components & Containers
+Components represent each key piece of your system. Containers represent the physical locations or data centers that components exist in.
+
+
+## List Components [/component/list/{statuspage_id}]
+
+List all components
+
++ Parameters
+
+    + statuspage_id (string, `53d75690483cd492cf000008`) ... Status page ID
+
+### component/list [GET]
+
++ statuspage_id (string, required) - Status page ID
+
++ Request (application/json)
+
+    + Headers
+    
+            x-api-id: YOUR-API-ID
+
+            x-api-key: YOUR-API-KEY
+            
++ Response 200 (application/json)
+
+    + Body
+
+            {
+               "status": {
+                   "error": "no",
+                   "message": "OK"
+               },
+               "result": [
+                   {
+                       "__v": 0,
+                       "_id": "53d75690483cd492cf000008",
+                       "containers": [
+                           {
+                               "__v": 0,
+                               "_id": "52e5e0e08935485437000019",
+                               "name": "Amsterdam",
+                               "location": "do-ams-2"
+                           }
+                       ],
+                       "name": "Database",
+                       "position": 2,
+                       "statuspage": "53d74690383cd493cf000008"
+                   },
+                   {
+                       "__v": 0,
+                       "_id": "52e5e0e0893548543700001a",
+                       "containers": [
+                           {
+                               "__v": 0,
+                               "_id": "52e5e0e08935485437000019",
+                               "name": "Amsterdam",
+                               "location": "do-ams-2"
+                           },
+                           {
+                               "__v": 0,
+                               "_id": "52e5e2d6b799555038000009",
+                               "name": "Tokyo",
+                               "location": "ap-northeast-1"
+                           }
+                       ],
+                       "name": "Website",
+                       "position": 1,
+                       "statuspage": "53d74690383cd493cf000008"
+                   }
+               ]
+            }
+
+## Update Component Status [/component/status/update]
+
+Update the status of a component on the fly without creating an incident or maintenance
+
+    
+### component/status/update [POST]
+
++ statuspage_id (string, required) - Status page ID
+
++ component (string, required) - ID of affected component
+
++ container (string, required) - ID of affected container (Container must be attached to the component)
+
++ details (string, required) - A brief message describing this update
+
++ current_status (number, required) - Any numeric status code. <a href="http://kb.status.io/developers/status-codes" target="_blank">View status level codes</a>
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
+    + Body
+    
+            {
+              "statuspage_id": "52e5e0e0893548543700000b",
+              "component": "53d7459705ddbc753f000bbd",
+              "container": "53d7455aedd0ac2340000600",
+              "details": "Server not responding",
+              "current_status": 500
+            }
+        
++ Response 200 (application/json)
+
+    + Body
+        
+            {
+            "status": {
+                "error": "no",
+                "message": "OK"
+            },
+            "result": true
+            }
+            
+
+
+# Group Incidents
+Track service issues and events with incidents
+
+
+## List Incidents [/incident/list/{statuspage_id}]
+
+List all active and resolved incidents
+
+**Note:** Limited to 200 results
+
+**Warning:** This method will be deprecated in future versions. Please use the *List Incidents By ID* method instead.
+
++ Parameters
+
+    + statuspage_id (string, `52e5e0e0893548543700000b`) ... Status page ID
+
+### incident/list [GET]
+
++ statuspage_id (string, required) - Status page ID
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "OK"
+           },
+           "result": {
+               "active_incidents": [
+                   {
+                       "__v": 0,
+                       "_id": "52e5ebd1e32578623900000c",
+
+        "infrastructure_affected": [
+          {
+            "component": {
+              "_id": "52e5e0e0893548543700001a",
+              "statuspage": "52e5e0e0893548543700000b",
+              "__v": 0,
+              "position": 1,
+              "containers": [
+                                   "52e5e0e08935485437000019",
+                                   "52e5e2d6b799555038000009"
+              ],
+              "name": "Website"
+            },
+            "container": {
+              "_id": "52e5e0e08935485437000019",
+              "name": "Amsterdam",
+              "__v": 0,
+              "position": 1,
+              "location_geo": {
+                "coords": []
+              },
+                               "location": "do-ams-2"
+            },
+            "_id": "5a1b41edb4546d046c8efa06"
+          }
+        ],
+
+                       "components_affected": [
+                           {
+                               "__v": 0,
+                               "_id": "52e5e0e0893548543700001a",
+                               "position": 1,
+                               "statuspage": "52e5e0e0893548543700000b",
+                               "containers": [
+                                   "52e5e0e08935485437000019",
+                                   "52e5e2d6b799555038000009"
+                               ],
+                               "name": "Website"
+                           }
+                       ],
+                       "containers_affected": [
+                           {
+                               "__v": 0,
+                               "_id": "52e5e0e08935485437000019",
+                               "name": "Amsterdam",
+                               "location": "do-ams-2"
+                           },
+                           {
+                               "__v": 0,
+                               "_id": "52e5e2d6b799555038000009",
+                               "name": "Tokyo",
+                               "location": "ap-northeast-1"
+                           }
+                       ],
+                       "datetime_open": "2014-01-27T05:17:05.089Z",
+                       "kind": "incident",
+                       "messages": [
+                           {
+                               "details": "Troubleshooting now.",
+                               "source": "Dashboard",
+                               "state": 100,
+                               "status": 300,
+                               "statuspage": "52e5e0e0893548543700000b",
+                               "incident": "52e5ebd1e32578623900000c",
+                               "ip": "127.0.0.1",
+                               "_id": "52e5ebd1e32578623900000d",
+                               "__v": 0,
+                               "datetime": "2014-01-27T05:17:05.185Z",
+                               "containers": [
+                                   "52e5e0e08935485437000019",
+                                   "52e5e2d6b799555038000009"
+                               ],
+                               "components": [
+                                   "52e5e0e0893548543700001a"
+                               ]
+                           }
+                       ],
+                       "name": "Elevated web error rate",
+                       "statuspage": "52e5e0e0893548543700000b"
+                   }
+               ],
+               "resolved_incidents": []
+           }
+        }                    
+
+## List Incidents By ID [/incidents/{statuspage_id}]
+
+List all active and resolved incidents
+
++ Parameters
+
+    + statuspage_id (string, `52e5e0e0893548543700000b`) ... Status page ID
+
+### incidents/ [GET]
+
++ statuspage_id (string, required) - Status page ID
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "OK"
+           },
+           "result": {
+               "active_incidents": [
+                  "52e5ebd1e32578623900000c",
+                  "51e5ebd1e32578623600000b",
+                ],
+               "resolved_incidents": []
+           }
+        }                    
+
+## Get Incident [/incident/{statuspage_id}/{incident_id}]
+
+Get a single incident
+
++ Parameters
+
+    + statuspage_id (string, `52e5e0e0893548543700000b`) ... Status page ID
+    + incident_id (string, `52e5ebd1e32578623900000c`) ... Incident ID
+
+### incident/ [GET]
+
++ statuspage_id (string, required) - Status page ID
++ incident_id (string, required) - Incident ID
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "OK"
+           },
+           "result": [{
+                       "__v": 0,
+                       "_id": "52e5ebd1e32578623900000c",
+
+        "infrastructure_affected": [
+          {
+            "component": {
+              "_id": "52e5e0e0893548543700001a",
+              "statuspage": "52e5e0e0893548543700000b",
+              "__v": 0,
+              "position": 1,
+              "containers": [
+                                   "52e5e0e08935485437000019",
+                                   "52e5e2d6b799555038000009"
+              ],
+              "name": "Website"
+            },
+            "container": {
+              "_id": "52e5e0e08935485437000019",
+              "name": "Amsterdam",
+              "__v": 0,
+              "position": 1,
+              "location_geo": {
+                "coords": []
+              },
+                               "location": "do-ams-2"
+            },
+            "_id": "5a1b41edb4546d046c8efa06"
+          }
+        ],
+
+                       "components_affected": [
+                           {
+                               "__v": 0,
+                               "_id": "52e5e0e0893548543700001a",
+                               "position": 1,
+                               "statuspage": "52e5e0e0893548543700000b",
+                               "containers": [
+                                   "52e5e0e08935485437000019",
+                                   "52e5e2d6b799555038000009"
+                               ],
+                               "name": "Website"
+                           }
+                       ],
+                       "containers_affected": [
+                           {
+                               "__v": 0,
+                               "_id": "52e5e0e08935485437000019",
+                               "name": "Amsterdam",
+                               "location": "do-ams-2"
+                           },
+                           {
+                               "__v": 0,
+                               "_id": "52e5e2d6b799555038000009",
+                               "name": "Tokyo",
+                               "location": "ap-northeast-1"
+                           }
+                       ],
+                       "datetime_open": "2014-01-27T05:17:05.089Z",
+                       "kind": "incident",
+                       "messages": [
+                           {
+                               "details": "Troubleshooting now.",
+                               "source": "Dashboard",
+                               "state": 100,
+                               "status": 300,
+                               "statuspage": "52e5e0e0893548543700000b",
+                               "incident": "52e5ebd1e32578623900000c",
+                               "ip": "127.0.0.1",
+                               "_id": "52e5ebd1e32578623900000d",
+                               "__v": 0,
+                               "datetime": "2014-01-27T05:17:05.185Z",
+                               "containers": [
+                                   "52e5e0e08935485437000019",
+                                   "52e5e2d6b799555038000009"
+                               ],
+                               "components": [
+                                   "52e5e0e0893548543700001a"
+                               ]
+                           }
+                       ],
+                       "name": "Elevated web error rate",
+                       "statuspage": "52e5e0e0893548543700000b"
+        ]}   
+        }
+
+
+## Get Incident Message [/incident/message/{statuspage_id}/{message_id}]
+
+View single incident message
+
++ Parameters
+
+    + statuspage_id (string, `52e5e0e0893548543700000b`) ... Status page ID
+
+    + message_id (string, `52e5ebd1e32578623900000d`) ... Message ID
+
+### incident/message [GET]
+
++ statuspage_id (string, required) - Status page ID
++ message_id (string, required) - Incident message ID
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
++ Response 200 (application/json)
+
+        {
+            "status": {
+                "error": "no",
+                "message": "Get incident message success"
+            },
+            "result": {
+                "user_email": "joe@status.io",
+                "user_full_name": "Joe",
+                "details": "Elevated database errors",
+                "source": "API",
+                "social": "0",
+                "state": 100,
+                "status": 300,
+                "statuspage": "52e5e0e0893548543700000b",
+                "incident": "52e5ebd1e32578623900000c",
+                "ip": "127.0.0.1",
+                "_id": "52e5ebd1e32578623900000d",
+                "__v": 0,
+                "datetime": "2014-08-24T05:00:13.025Z",
+                "containers": [
+                    "52e5e0e08935485437000019"
+                ],
+                "components": [
+                    "52e5e0e0893548543700001a"
+                ]
+            }
+        }
+
+## Create Incident [/incident/create]
+
+Create a new incident
+
+### incident/create [POST]
+
++ statuspage_id (string, required) - Status page ID
+
++ all_infrastructure_affected (string, required) - Affect all components and containers (default = 0)
+
++ infrastructure_affected (array, required) - ID of each affected component and ID of each affected container
+
++ incident_name (string, required) - A descriptive title for the incident
+
++ incident_details (string, required) - Message describing this incident
+
++ current_status (number, required) - The status of the components and containers affected by this incident. <a href="http://kb.status.io/developers/status-codes" target="_blank">View status level codes</a>
+
++ current_state (number, required) - The state of this incident. <a href="http://kb.status.io/developers/status-codes" target="_blank">View state level codes</a>
+
++ social (string, required) - Automatically Tweet this update. (1 = Send Tweet)
+
++ notify_email (string, optional) - Notify email subscribers (1 = Send notification)
+
++ notify_sms (string, optional) - Notify SMS subscribers (1 = Send notification)
+
++ notify_webhook (string, optional) - Notify webhook subscribers (1 = Send notification)
+
++ irc (string, optional) - Notify IRC channel (1 = Send notification)
+
++ hipchat (string, optional) - Notify HipChat room (1 = Send notification)
+
++ slack (string, optional) - Notify Slack channel (1 = Send notification)
+
++ message_subject (string, optional) - The message subject for email notifications. <a href="http://kb.status.io/notifications/message-subject-variables/" target="_blank">How to use variables in the message subject</a>
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
+    + Body
+    
+            {
+              "statuspage_id": "52e5e0e0893548543700000b",
+              "infrastructure_affected": [
+                "53d746c0383cd493cf00001a-53d746c0383cd493cf00001b",
+                "53d746c0383cd493cf00001a-53d746c8383cd493cf00001e"
+              ],              
+              "incident_name": "Database errors",
+              "incident_details": "Investigating database connection issue",
+              "message_subject": "Example notification message subject",
+              "notify_email": "0",
+              "notify_sms": "1",
+              "notify_webhook": "0",
+              "social": "0",
+              "irc": "0",
+              "hipchat": "0",
+              "slack": "0",
+              "current_status": 300,
+              "current_state": 100,
+              "all_infrastructure_affected": "0"
+            }
+
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "OK"
+           },
+           "result": 52e5e0e3290548543700000b
+        }        
+
+## Update Incident [/incident/update]
+
+Update an existing incident
+
+### incident/update [POST]
+
++ statuspage_id (string, required) - Status page ID
+
++ incident_id (string, required) - Incident ID
+
++ incident_details (string, required) - Message describing this incident update
+
++ current_status (number, required) - The status of the components and containers affected by this incident. <a href="http://kb.status.io/developers/status-codes" target="_blank">View status level codes</a>
+
++ current_state (number, required) - The state of this incident. <a href="http://kb.status.io/developers/status-codes" target="_blank">View state level codes</a>
+
++ social (string, required) - Automatically Tweet this update. (1 = Send Tweet)
+
++ notify_email (string, optional) - Notify email subscribers (1 = Send notification)
+
++ notify_sms (string, optional) - Notify SMS subscribers (1 = Send notification)
+
++ notify_webhook (string, optional) - Notify webhook subscribers (1 = Send notification)
+
++ irc (string, optional) - Notify IRC channel (1 = Send notification)
+
++ hipchat (string, optional) - Notify HipChat room (1 = Send notification)
+
++ slack (string, optional) - Notify Slack channel (1 = Send notification)
+
++ message_subject (string, optional) - The message subject for email notifications. <a href="http://kb.status.io/notifications/message-subject-variables/" target="_blank">How to use variables in the message subject</a>
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
+    + Body
+    
+            {
+              "statuspage_id": "52e5e0e0893548543700000b",
+              "incident_id": "52e5ebd1e32578623900000c",
+              "incident_details": "Testing alternate configuration",
+              "message_subject": "Example notification message subject",
+              "notify_email": "0",
+              "notify_sms": "0",
+              "notify_webhook": "0",
+              "social": "0",
+              "irc": "0",
+              "hipchat": "0",
+              "slack": "0",
+              "current_status": 300,
+              "current_state": 200
+            }
+
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "OK"
+           },
+           "result": true
+        }        
+
+##  Resolve Incident [/incident/resolve]
+
+Resolve an existing incident
+
+### incident/resolve [POST]
+
++ statuspage_id (string, required) - Status page ID
+
++ incident_id (string, required) - Incident ID
+
++ incident_details (string, required) - Message describing this incident
+
++ social (string, required) - Automatically Tweet this update. (1 = Send Tweet)
+
++ notify_email (string, optional) - Notify email subscribers (1 = Send notification)
+
++ notify_sms (string, optional) - Notify SMS subscribers (1 = Send notification)
+
++ notify_webhook (string, optional) - Notify webhook subscribers (1 = Send notification)
+
++ irc (string, optional) - Notify IRC channel (1 = Send notification)
+
++ hipchat (string, optional) - Notify HipChat room (1 = Send notification)
+
++ slack (string, optional) - Notify Slack channel (1 = Send notification)
+
++ message_subject (string, optional) - The message subject for email notifications. <a href="http://kb.status.io/notifications/message-subject-variables/" target="_blank">How to use variables in the message subject</a>
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
+    + Body
+    
+            {
+              "statuspage_id": "52e5e0e0893548543700000b",
+              "incident_id": "52e5ebd1e32578623900000c",
+              "incident_details": "Our ninjas fixed everything. This incident is resolved.",
+              "message_subject": "Example notification message subject",
+              "notify_email": "0",
+              "notify_sms": "1",
+              "notify_webhook": "0",
+              "social": "0",
+              "irc": "0",
+              "hipchat": "0",
+              "slack": "0"
+            }
+            
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "OK"
+           },
+           "result": true
+        }        
+
+## Delete Incident [/incident/delete]
+
+Delete an existing incident. The incident will be deleted forever and cannot be recovered.
+
+### incident/delete [POST]
+
++ statuspage_id (string, required) - Status page ID
+
++ incident_id (string, required) - Incident ID
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
+    + Body
+    
+            {
+              "statuspage_id": "52e5e0e0893548543700000b",
+              "incident_id": "52e5ebd1e32578623900000c"
+            }
+
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "Successfully deleted incident"
+           },
+           "result": true
+        }        
+
+## Create Historic Incident [/incident/history/create]
+
+Create a new historic incident
+
+### incident/history/create [POST]
+
++ statuspage_id (string, required) - Status page ID
+
++ all_infrastructure_affected (string, required) - Affect all components and containers (default = 0)
+
++ infrastructure_affected (array, required) - ID of each affected component and ID of each affected container
+
++ incident_name (string, required) - A descriptive title for the incident
+
++ incident_details_start (string, required) - Message describing the start of this incident
+
++ incident_details_resolve (string, required) - Message describing the resolution of this incident
+
++ current_status (number, required) - The original status of the components and containers affected by this incident. <a href="http://kb.status.io/developers/status-codes" target="_blank">View status level codes</a>
+
++ incident_start_date (string, required) - Maintenance start date
+
++ incident_start_time (string, required) - Maintenance start time
+
++ incident_end_date (string, required) - Maintenance end date
+
++ incident_end_time (string, required) - Maintenance end time
+
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
+    + Body
+    
+            {
+              "statuspage_id": "52e5e0e0893548543700000b",
+              "all_infrastructure_affected": "0",
+              "infrastructure_affected": [
+                "53d746c0383cd493cf00001a-53d746c0383cd493cf00001b",
+                "53d746c0383cd493cf00001a-53d746c8383cd493cf00001e"
+              ],
+              "incident_name": "API Outage",
+              "incident_details_start": "Investigating API connection errors",
+              "incident_details_resolve": "This issue has been resolved. The connection errors were caused by a failing node that was not automatically removed from the cluster.",
+              "current_status": 300,
+              "incident_start_date": "05/01/2015",
+              "incident_start_time": "03:00",
+              "incident_end_date": "05/01/2015",
+              "incident_end_time": "03:15"
+            }
+
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "OK"
+           },
+           "result": "52e5e0e3290548543700000b"
+        }        
+        
+# Group Maintenance
+Manage planned maintenance activities
+
+## List Maintenances [/maintenance/list/{statuspage_id}]
+
+List all active, resolved and upcoming maintenance events
+
+**Note:** Limited to 200 results
+
+**Warning:** This method will be deprecated in future versions. Please use the *List Maintenances By ID* method instead.
+
++ Parameters
+
+    + statuspage_id (string, `52e5e0e0893548543700000b`) ... Status page ID
+
+### maintenance/list [GET]
+
++ statuspage_id (string, required) - Status page ID
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "OK"
+           },
+           "result": {
+               "active_maintenances": [],
+               "upcoming_maintenances": [
+                   {
+                       "__v": 0,
+                       "_id": "52e5eacc908cdc5e39000009",
+
+        "infrastructure_affected": [
+          {
+            "component": {
+              "_id": "52e5e0e0893548543700001a",
+              "statuspage": "52e5e0e0893548543700000b",
+              "__v": 0,
+              "position": 1,
+              "containers": [
+                                   "52e5e0e08935485437000019",
+                                   "52e5e2d6b799555038000009"
+              ],
+              "name": "Website"
+            },
+            "container": {
+              "_id": "52e5e0e08935485437000019",
+              "name": "Amsterdam",
+              "__v": 0,
+              "position": 1,
+              "location_geo": {
+                "coords": []
+              },
+                               "location": "do-ams-2"
+            },
+            "_id": "5a1b41edb4546d046c8efa06"
+          }
+        ],
+
+
+                       "components_affected": [
+                           {
+                               "__v": 0,
+                               "_id": "52e5e0e0893548543700001a",
+                               "position": 1,
+                               "statuspage": "52e5e0e0893548543700000b",
+                               "containers": [
+                                   "52e5e0e08935485437000019",
+                                   "52e5e2d6b799555038000009"
+                               ],
+                               "name": "Website"
+                           }
+                       ],
+                       "containers_affected": [
+                           {
+                               "__v": 0,
+                               "_id": "52e5e0e08935485437000019",
+                               "name": "Amsterdam",
+                               "location": "do-ams-2"
+                           }
+                       ],
+                       "datetime_open": "2014-01-27T05:12:44.880Z",
+                       "datetime_planned_end": "2013-12-30T12:00:00.000Z",
+                       "datetime_planned_start": "2014-01-05T12:00:00.000Z",
+                       "kind": "maintenance",
+                       "messages": [
+                           {
+                               "details": "1111",
+                               "source": "Dashboard",
+                               "state": 100,
+                               "status": 200,
+                               "statuspage": "52e5e0e0893548543700000b",
+                               "maintenance": "52e5eacc908cdc5e39000009",
+                               "ip": "127.0.0.1",
+                               "_id": "52e5eacc908cdc5e3900000a",
+                               "__v": 0,
+                               "datetime": "2014-01-27T05:12:44.937Z",
+                               "containers": [
+                                   "52e5e0e08935485437000019"
+                               ],
+                               "components": [
+                                   "52e5e0e0893548543700001a"
+                               ]
+                           }
+                       ],
+                       "name": "test",
+                       "statuspage": "52e5e0e0893548543700000b"
+                   }
+               ],
+               "resolved_maintenances": []
+           }
+        }
+
+
+## List Maintenances By ID [/maintenances/{statuspage_id}]
+
+List all active, resolved and upcoming maintenance events
+
++ Parameters
+
+    + statuspage_id (string, `52e5e0e0893548543700000b`) ... Status page ID
+
+### maintenances/ [GET]
+
++ statuspage_id (string, required) - Status page ID
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "OK"
+           },
+           "result": {
+               "active_maintenances": [],
+               "upcoming_maintenances": [
+                   "52e5eacc908cdc5e39000009"
+               ],
+               "resolved_maintenances": []
+           }
+        }
+
+
+## Get Maintenance [/maintenance/{statuspage_id}/{maintenance_id}]
+
+Get a single maintenance
+
++ Parameters
+
+    + statuspage_id (string, `52e5e0e0893548543700000b`) ... Status page ID
+    + maintenance_id (string, `52e5eacc908cdc5e39000009`) ... Maintenance ID
+
+### maintenance/ [GET]
+
++ statuspage_id (string, required) - Status page ID
++ maintenance_id (string, required) - Maintenance ID
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "OK"
+           },
+           "result": {
+                       "__v": 0,
+                       "_id": "52e5eacc908cdc5e39000009",
+
+        "infrastructure_affected": [
+          {
+            "component": {
+              "_id": "52e5e0e0893548543700001a",
+              "statuspage": "52e5e0e0893548543700000b",
+              "__v": 0,
+              "position": 1,
+              "containers": [
+                                   "52e5e0e08935485437000019",
+                                   "52e5e2d6b799555038000009"
+              ],
+              "name": "Website"
+            },
+            "container": {
+              "_id": "52e5e0e08935485437000019",
+              "name": "Amsterdam",
+              "__v": 0,
+              "position": 1,
+              "location_geo": {
+                "coords": []
+              },
+                               "location": "do-ams-2"
+            },
+            "_id": "5a1b41edb4546d046c8efa06"
+          }
+        ],
+
+
+                       "components_affected": [
+                           {
+                               "__v": 0,
+                               "_id": "52e5e0e0893548543700001a",
+                               "position": 1,
+                               "statuspage": "52e5e0e0893548543700000b",
+                               "containers": [
+                                   "52e5e0e08935485437000019",
+                                   "52e5e2d6b799555038000009"
+                               ],
+                               "name": "Website"
+                           }
+                       ],
+                       "containers_affected": [
+                           {
+                               "__v": 0,
+                               "_id": "52e5e0e08935485437000019",
+                               "name": "Amsterdam",
+                               "location": "do-ams-2"
+                           }
+                       ],
+                       "datetime_open": "2014-01-27T05:12:44.880Z",
+                       "datetime_planned_end": "2013-12-30T12:00:00.000Z",
+                       "datetime_planned_start": "2014-01-05T12:00:00.000Z",
+                       "kind": "maintenance",
+                       "messages": [
+                           {
+                               "details": "1111",
+                               "source": "Dashboard",
+                               "state": 100,
+                               "status": 200,
+                               "statuspage": "52e5e0e0893548543700000b",
+                               "maintenance": "52e5eacc908cdc5e39000009",
+                               "ip": "127.0.0.1",
+                               "_id": "52e5eacc908cdc5e3900000a",
+                               "__v": 0,
+                               "datetime": "2014-01-27T05:12:44.937Z",
+                               "containers": [
+                                   "52e5e0e08935485437000019"
+                               ],
+                               "components": [
+                                   "52e5e0e0893548543700001a"
+                               ]
+                           }
+                       ],
+                       "name": "test",
+                       "statuspage": "52e5e0e0893548543700000b"
+                   }
+        }
+
+
+## Get Maintenance Message [/maintenance/message/{statuspage_id}/{message_id}]
+
+View single maintenance message
+
++ Parameters
+
+    + statuspage_id (string, `52e5e0e0893548543700000b`) ... Status page ID
+
+    + message_id (string, `52e5eacc908cdc5e3900000a`) ... Message ID
+
+### maintenance/message [GET]
+
++ statuspage_id (string, required) - Status page ID
+
++ message_id (string, required) - Maintenance message ID
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
++ Response 200 (application/json)
+
+
+        {
+          "status": {
+              "error": "no",
+              "message": "Get maintenance message success"
+          },
+          "result": {
+              "details": "Launching deployments now.",
+              "source": "Dashboard",
+              "state": 200,
+              "statuspage": "52e5e0e0893548543700000b",
+              "maintenance": "52e5eacc908cdc5e39000009",
+              "ip": "127.0.0.1",
+              "_id": "52e5eacc908cdc5e3900000a",
+              "__v": 0,
+              "datetime": "2014-06-07T03:08:41.233Z",
+              "containers": [
+                  "52e5e0e08935485437000019"
+                ],
+              "components": [
+                  "52e5e0e0893548543700001a"
+              ]
+          }
+        }        
+
+
+### Schedule Maintenance [/maintenance/schedule]
+
+Schedule a new maintenance
+
+### maintenance/schedule [POST]
+
++ statuspage_id (string, required) - Status page ID
++ all_infrastructure_affected (string, required) - Affect all components and containers (default = 0)
++ infrastructure_affected (array, required) - ID of each affected component and ID of each affected container
++ maintenance_name (string, required) - A descriptive title for this maintenance
++ maintenance_details (string, required) - Message describing this maintenance
++ date_planned_start (string, required) - Date maintenance is expected to start
++ time_planned_start (string, required) - Time maintenance is expected to start
++ date_planned_end (string, required) - Date maintenance is expected to end
++ time_planned_end (string, required) - Time maintenance is expected to end
++ maintenance_notify_now (string, required) - Notify subscribers now (1 = Send notification)
++ maintenance_notify_72_hr (string, required) - Notify subscribers 72 hours before scheduled maintenance start time (1 = Send notification)
++ maintenance_notify_24_hr (string, required) - Notify subscribers 24 hours before scheduled maintenance start time (1 = Send notification)
++ maintenance_notify_1_hr (string, required) - Notify subscribers 1 hour before scheduled maintenance start time (1 = Send notification)
++ message_subject (string, optional) - The message subject for email notifications. <a href="http://kb.status.io/notifications/message-subject-variables/" target="_blank">How to use variables in the message subject</a>
++ automation (string, required) - Automatically start and end the maintenance (default = 0)
++ automation_start_text (string, optional) - Message content when maintenance starts
++ automation_stop_text (string, optional) - Message content when maintenance ends
++ automation_notify_start_email (string, optional) - Notify email subscribers at the start of the maintenance (default = 0)
++ automation_notify_start_sms (string, optional) - Notify SMS subscribers at the start of the maintenance (default = 0)
++ automation_notify_start_webhook (string, optional) - Notify Webhook subscribers at the start of the maintenance (default = 0)
++ automation_notify_start_twitter (string, optional) - Tweet at the start of the maintenance (default = 0)
++ automation_notify_start_irc (string, optional) - Notify IRC channel at the start of the maintenance (default = 0)
++ automation_notify_start_hipchat (string, optional) - Notify HipChat room at the start of the maintenance (default = 0)
++ automation_notify_start_slack (string, optional) - Notify Slack channel at the start of the maintenance (default = 0)
++ automation_notify_stop_email (string, optional) - Notify email subscribers at the end of the maintenance (default = 0)
++ automation_notify_stop_sms (string, optional) - Notify SMS subscribers at the end of the maintenance (default = 0)
++ automation_notify_stop_webhook (string, optional) - Notify Webhook subscribers at the end of the maintenance (default = 0)
++ automation_notify_stop_twitter (string, optional) - Tweet at the end of the maintenance (default = 0)
++ automation_notify_stop_irc (string, optional) - Notify IRC channel at the end of the maintenance (default = 0)
++ automation_notify_stop_hipchat (string, optional) - Notify HipChat room at the end of the maintenance (default = 0)
++ automation_notify_stop_slack (string, optional) - Notify Slack channel at the end of the maintenance (default = 0)
+
+
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
+    + Body
+    
+            {
+              "statuspage_id": "52e5e0e0893548543700000b",
+              "all_infrastructure_affected": "0",
+              "infrastructure_affected": [
+                "53d746c0383cd493cf00001a-53d746c0383cd493cf00001b",
+                "53d746c0383cd493cf00001a-53d746c8383cd493cf00001e"
+              ],
+              "maintenance_name": "Router Upgrade",
+              "maintenance_details": "Upgrading router firmware to version 12.0.7. No downtime is expected.",
+              "message_subject": "Example notification message subject",
+              "date_planned_start": "05/07/2014",
+              "time_planned_start": "23:00",
+              "date_planned_end": "05/07/2014",
+              "time_planned_end": "23:30",
+              "maintenance_notify_now": "0",
+              "maintenance_notify_72_hr": "0",
+              "maintenance_notify_24_hr": "0",
+              "maintenance_notify_1_hr": "0",
+              "automation": "0"
+            }
+
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "OK"
+           },
+           "result": 52e5e0e3290548543700000b
+        }        
+
+## Start Maintenance [/maintenance/start]
+
+Start a scheduled maintenance now
+
+### maintenance/start [POST]
+
++ statuspage_id (string, required) - Status page ID
+
++ maintenance_id (string, required) - Maintenance ID
+
++ maintenance_details (string, required) - Message describing this maintenance update
+
++ social (string, required) - Automatically Tweet this update. (1 = Send Tweet)
+
++ notify_email (string, optional) - Notify email subscribers (1 = Send notification)
+
++ notify_sms (string, optional) - Notify SMS subscribers (1 = Send notification)
+
++ notify_webhook (string, optional) - Notify webhook subscribers (1 = Send notification)
+
++ irc (string, optional) - Notify IRC channel (1 = Send notification)
+
++ hipchat (string, optional) - Notify HipChat room (1 = Send notification)
+
++ slack (string, optional) - Notify Slack channel (1 = Send notification)
+
++ message_subject (string, optional) - The message subject for email notifications. <a href="http://kb.status.io/notifications/message-subject-variables/" target="_blank">How to use variables in the message subject</a>
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
+    + Body
+    
+            {
+              "statuspage_id": "52e5e0e0893548543700000b",
+              "maintenance_id": "52e5eacc908cdc5e39000009",
+              "maintenance_details": "Starting maintenance activity now",
+              "message_subject": "Example notification message subject",
+              "notify_email": "0",
+              "notify_sms": "1",
+              "notify_webhook": "0",
+              "social": "0",
+              "irc": "0",
+              "hipchat": "0",
+              "slack": "0"
+            }
+        
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "OK"
+           },
+           "result": true
+        }        
+
+
+## Update Maintenance [/maintenance/update]
+
+Update an active maintenance
+
+### maintenance/update [POST]
+
++ statuspage_id (string, required) - Status page ID
+
++ maintenance_id (string, required) - Maintenance ID
+
++ maintenance_details (string, required) - Message describing this maintenance
+
++ social (string, required) - Automatically Tweet this update. (1 = Send Tweet)
+
++ notify_email (string, optional) - Notify email subscribers (1 = Send notification)
+
++ notify_sms (string, optional) - Notify SMS subscribers (1 = Send notification)
+
++ notify_webhook (string, optional) - Notify webhook subscribers (1 = Send notification)
+
++ irc (string, optional) - Notify IRC channel (1 = Send notification)
+
++ hipchat (string, optional) - Notify HipChat room (1 = Send notification)
+
++ slack (string, optional) - Notify Slack channel (1 = Send notification)
+
++ message_subject (string, optional) - The message subject for email notifications. <a href="http://kb.status.io/notifications/message-subject-variables/" target="_blank">How to use variables in the message subject</a>
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
+    + Body
+    
+            {
+              "statuspage_id": "52e5e0e0893548543700000b",
+              "maintenance_id": "52e5eacc908cdc5e39000009",
+              "maintenance_details": "Servers in Amsterdam zone 1 have been upgraded",
+              "message_subject": "Example notification message subject",
+              "notify_email": "0",
+              "notify_sms": "1",
+              "notify_webhook": "0",
+              "social": "0",
+              "irc": "0",
+              "hipchat": "0",
+              "slack": "0"
+            }
+
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "OK"
+           },
+           "result": true
+        }        
+
+## Finish Maintenance [/maintenance/finish]
+
+Close an active maintenance. The maintenance will be moved to the history.
+
+### maintenance/finish [POST]
+
++ statuspage_id (string, required) - Status page ID
+
++ maintenance_id (string, required) - Maintenance ID
+
++ maintenance_details (string, required) - Message describing this maintenance
+
++ social (string, required) - Automatically Tweet this update. (1 = Send Tweet)
+
++ notify_email (string, optional) - Notify email subscribers (1 = Send notification)
+
++ notify_sms (string, optional) - Notify SMS subscribers (1 = Send notification)
+
++ notify_webhook (string, optional) - Notify webhook subscribers (1 = Send notification)
+
++ irc (string, optional) - Notify IRC channel (1 = Send notification)
+
++ hipchat (string, optional) - Notify HipChat room (1 = Send notification)
+
++ slack (string, optional) - Notify Slack channel (1 = Send notification)
+
++ message_subject (string, optional) - The message subject for email notifications. <a href="http://kb.status.io/notifications/message-subject-variables/" target="_blank">How to use variables in the message subject</a>
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
+    + Body
+    
+            {
+              "statuspage_id": "52e5e0e0893548543700000b",
+              "maintenance_id": "52e5eacc908cdc5e39000009",
+              "maintenance_details": "Maintenance is complete",
+              "message_subject": "Example notification message subject",
+              "notify_email": "0",
+              "notify_sms": "1",
+              "notify_webhook": "0",
+              "social": "0",
+              "irc": "0",
+              "hipchat": "0",
+              "slack": "0"
+            }
+            
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "OK"
+           },
+           "result": true
+        }        
+
+## Delete Maintenance [/maintenance/delete]
+
+Delete an existing maintenance. The maintenance will be deleted forever and cannot be recovered.
+
+### maintenance/delete [POST]
+
++ statuspage_id (string, required) - Status page ID
+
++ maintenance_id (string, required) - Maintenance ID
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
+    + Body
+    
+            {
+                "statuspage_id": "52e5e0e0893548543700000b",
+                "maintenance_id": "52e5ebd1e32578623900000c"
+            }
+
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "OK"
+           },
+           "result": true
+        }        
+
+## Create Historic maintenance [/maintenance/history/create]
+
+Create a new historic maintenance
+
+### maintenance/history/create [POST]
+
++ statuspage_id (string, required) - Status page ID
+
++ all_infrastructure_affected (string, required) - Affect all components and containers (default = 0)
+
++ infrastructure_affected (array, required) - ID of each affected component and ID of each affected container
+
++ maintenance_name (string, required) - A descriptive title for the maintenance
+
++ maintenance_details_schedule (string, required) - Message describing the scheduling of this maintenance
+
++ maintenance_details_start (string, required) - Message describing the start of this maintenance
+
++ maintenance_details_end (string, required) - Message describing the end of this maintenance
+
++ maintenance_start_date (string, required) - Maintenance start date
+
++ maintenance_start_time (string, required) - Maintenance start time
+
++ maintenance_end_date (string, required) - Maintenance end date
+
++ maintenance_end_time (string, required) - Maintenance end time
+
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
+    + Body
+    
+            {
+              "statuspage_id": "52e5e0e0893548543700000b",
+              "all_infrastructure_affected": "0",
+              "infrastructure_affected": [
+                "53d746c0383cd493cf00001a-53d746c0383cd493cf00001b",
+                "53d746c0383cd493cf00001a-53d746c8383cd493cf00001e"
+              ],
+              "maintenance_name": "Database Upgrade",
+              "maintenance_details_schedule": "We will be upgrading the hardware for the main database server. No downtime expected.",
+              "maintenance_details_start": "Maintenance started.",
+              "maintenance_details_end": "Maintenance completed successfully.",
+              "maintenance_start_date": "05/01/2015",
+              "maintenance_start_time": "03:00",
+              "maintenance_end_date": "05/01/2015",
+              "maintenance_end_time": "03:15"
+            }
+
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "OK"
+           },
+           "result": "52e5e0e3290548543700000b"
+        }        
+        
+        
+# Group Metrics
+Manage your custom metrics. Create new custom metrics in the [Dashboard](https://status.io/dashboard).
+
+
+## Update Metric [/metric/update]
+
+Update custom metric data
+
+### metric/update [POST]
+
++ statuspage_id (string, required) - Status page ID
+
++ metric_id (string, required) - Metric ID
+
++ day_avg (string, required) - Average value for past 24 hours
+
++ day_start (string, required) - UNIX timestamp for start of metric timeframe
+
++ day_dates (array, required) - An array of timestamps for the past 24 hours (2014-03-28T05:43:00+00:00)
+
++ day_values (array, required) - An array of values matching the timestamps (Must be 24 values)
+
++ week_avg (string, required) - Average value for past 7 days
+
++ week_start (string, required) - UNIX timestamp for start of metric timeframe
+
++ week_dates (array, required) - An array of timestamps for the past 7 days (2014-03-28T05:43:00+00:00)
+
++ week_values (array, required) - An array of values matching the timestamps (Must be 7 values)
+
++ month_avg (string, required) - Average value for past 30 days
+
++ month_start (string, required) - UNIX timestamp for start of metric timeframe
+
++ month_dates (array, required) - An array of timestamps for the past 30 days (2014-03-28T05:43:00+00:00)
+
++ month_values (array, required) - An array of values matching the timestamps (Must be 30 values)
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+            
+    + Body
+    
+            {
+              "statuspage_id": "52e5e0e0893548543700000b",
+              "metric_id": "52e5e0e0893548542400000b",
+              "day_avg": "22.58",
+              "day_start": "1395981878000",
+              "day_dates": ["2014-03-28T05:43:00+00:00","2014-03-28T06:43:00+00:00","2014-03-28T07:43:00+00:00","2014-03-28T08:43:00+00:00","2014-03-28T09:43:00+00:00","2014-03-28T10:43:00+00:00","2014-03-28T11:43:00+00:00","2014-03-28T12:43:00+00:00","2014-03-28T13:43:00+00:00","2014-03-28T14:43:00+00:00","2014-03-28T15:43:00+00:00","2014-03-28T16:43:00+00:00","2014-03-28T17:43:00+00:00","2014-03-28T18:43:00+00:00","2014-03-28T19:43:00+00:00","2014-03-28T20:43:00+00:00","2014-03-28T21:43:00+00:00","2014-03-28T22:43:00+00:00","2014-03-28T23:43:00+00:00","2014-03-29T00:43:00+00:00","2014-03-29T01:43:00+00:00","2014-03-29T02:43:00+00:00","2014-03-29T03:43:00+00:00"],
+              "day_values": ["20.70","20.00","19.20","19.80","19.90","20.10","21.40","23.00","27.40","28.70","27.50","29.30","28.50","27.20","28.60","28.70","25.90","23.40","22.40","21.40","19.80","19.50","20.00"],
+              "week_avg": "20.07",
+              "week_start": "1395463478000",
+              "week_dates": ["2014-03-22T04:43:00+00:00","2014-03-23T04:43:00+00:00","2014-03-24T04:43:00+00:00","2014-03-25T04:43:00+00:00","2014-03-26T04:43:00+00:00","2014-03-27T04:43:00+00:00","2014-03-28T04:43:00+00:00"],
+              "week_values": ["23.10","22.10","22.20","22.30","22.10","18.70","17.00"],
+              "month_avg": "10.63",
+              "month_start": "1393476280000",
+              "month_dates": ["2014-02-28T04:43:00+00:00","2014-03-01T04:43:00+00:00","2014-03-02T04:43:00+00:00","2014-03-03T04:43:00+00:00","2014-03-04T04:43:00+00:00","2014-03-05T04:43:00+00:00","2014-03-06T04:43:00+00:00","2014-03-07T04:43:00+00:00","2014-03-08T04:43:00+00:00","2014-03-09T04:43:00+00:00","2014-03-10T04:43:00+00:00","2014-03-11T04:43:00+00:00","2014-03-12T04:43:00+00:00","2014-03-13T04:43:00+00:00","2014-03-14T04:43:00+00:00","2014-03-15T04:43:00+00:00","2014-03-16T04:43:00+00:00","2014-03-17T04:43:00+00:00","2014-03-18T04:43:00+00:00","2014-03-19T04:43:00+00:00","2014-03-20T04:43:00+00:00","2014-03-21T04:43:00+00:00","2014-03-22T04:43:00+00:00","2014-03-23T04:43:00+00:00","2014-03-24T04:43:00+00:00","2014-03-25T04:43:00+00:00","2014-03-26T04:43:00+00:00","2014-03-27T04:43:00+00:00","2014-03-28T04:43:00+00:00"],
+              "month_values": ["0.00","0.00","0.00","0.00","0.00","0.00","0.00","0.00","0.00","0.00","0.00","0.00","18.50","18.60","18.40","16.60","16.80","17.90","19.90","21.30","22.80","20.00","17.30","19.10","21.50","22.40","22.50","22.00","21.80"]
+            }
+  
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "Updated metric successfully"
+           },
+           "result": true
+        }    
+                
+# Group Status
+Retrieve a summary of the current status of all components and containers
+
+
+## Status Summary [/status/summary/{statuspage_id}]
+
+Show the overall status summary for all components and containers
+####This method is similar to the status API call that you may provide to your API consumers. Check out the Public Status API call for your status page in the API tab in the Dashboard.
+
++ Parameters
+
+    + statuspage_id (string, `52e5e0e0893548543700000b`) ... Status page ID
+
+### status/summary [GET]
+
++ statuspage_id (string, required) - Status page ID
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
++ Response 200 (application/json)
+
+        {
+          "status": {
+            "error": "no",
+            "message": "Get public api status successfully"
+          },
+          "result": {
+            "status_overall": {
+              "updated": "2015-06-28T17:16:44.798Z",
+              "status": "Security Event",
+              "status_code": 600
+            },
+            "status": [
+              {
+                "id": "5334ebfae64cf90000000008",
+                "name": "Database",
+                "updated": "2015-06-28T17:16:44.798Z",
+                "status": "Security Event",
+                "status_code": 600,
+                "containers": [
+                  {
+                    "id": "5334ebefe64cf90000000007",
+                    "name": "DC 3",
+                    "updated": "2015-06-28T17:16:44.798Z",
+                    "status": "Partial Service Disruption",
+                    "status_code": 400
+                  },
+                  {
+                    "id": "5332766bf678630000000016",
+                    "name": "Primary Data Center",
+                    "updated": "2015-06-28T17:16:44.798Z",
+                    "status": "Security Event",
+                    "status_code": 600
+                  }
+                ]
+              },
+              {
+                "id": "5332766bf678630000000017",
+                "name": "Website",
+                "updated": "2015-06-28T17:16:44.798Z",
+                "status": "Operational",
+                "status_code": 100,
+                "containers": [
+                  {
+                    "id": "5332766bf678630000000016",
+                    "name": "Primary Data Center",
+                    "updated": "2015-06-28T17:16:44.798Z",
+                    "status": "Operational",
+                    "status_code": 100
+                  }
+                ]
+              }
+            ],
+            "incidents": [
+              {
+                "name": "Database Errors",
+                "_id": "59b709b105ae230bc72ec241",
+                "datetime_open": "2015-06-28T17:14:44.798Z",
+                "messages": [
+                  {
+                    "details": "Investigating database errors.",
+                    "state": 100,
+                    "status": 500,
+                    "datetime": "2015-06-28T17:14:44.798Z"
+                  },
+                  {
+                    "details": "Found the cause and implemented a temporary fix.",
+                    "state": 200,
+                    "status": 300,
+                    "datetime": "2015-06-28T17:16:44.798Z"
+                  }
+                ],
+                "containers_affected": [
+                  {
+                    "name": "Primary Data Center",
+                    "_id": "5332766bf678630000000016"
+                  }
+                ],
+                "components_affected": [
+                  {
+                    "name": "Database",
+                    "_id": "5334ebfae64cf90000000008"
+                  }
+                ]
+              }
+            ],
+            "maintenance": {
+              "active": [
+              
+              ],
+              "upcoming": [
+                {
+                  "name": "Server Hardware Upgrades",
+                  "_id": "5a597a34095336047fd1f874",
+                  "datetime_open": "2015-04-02T03:17:08.971Z",
+                  "datetime_planned_start": "2015-09-26T22:00:00.000Z",
+                  "datetime_planned_end": "2015-09-26T23:00:00.000Z",
+                  "messages": [
+                    {
+                      "details": "Increasing the RAM for the web servers.",
+                      "state": 100,
+                      "status": 200,
+                      "datetime": "2015-04-02T03:17:08.971Z"
+                    }
+                  ],
+                  "containers_affected": [
+                    {
+                      "name": "Primary Data Center",
+                      "_id": "5332766bf678630000000016"
+                    }
+                  ],
+                  "components_affected": [
+                    {
+                      "name": "Website",
+                      "_id": "5332766bf678630000000017"
+                    }
+                  ]
+                }
+
+              ]
+            }
+          }
+        }
+
+
+
+# Group Subscribers
+Manage your status page subscribers. Each subscriber will receive all incident and maintenance updates.
+
+
+## List Subscribers [/subscriber/list/{statuspage_id}]
+
+List all subscribers
+
++ Parameters
+
+    + statuspage_id (string, `52e5e0e0893548543700000b`) ... Status page ID
+
+### subscriber/list [GET]
+
++ statuspage_id (string, required) - Status page ID
+
++ Request (application/json)
+
+    + Headers
+        
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
++ Response 200 (application/json)
+
+            {
+               "status": {
+                   "error": "no",
+                   "message": "OK"
+               },
+               "result": {
+                   "email": [
+                       {
+                           "address": "test-2@example.com",
+                           "method": "email",
+                           "statuspage": "52e5e0e0873548543700000b",
+                           "_id": "52e5fc3626ff40053e00000d",
+                           "granular": [],
+                           "active": true,
+                           "join_date": "2014-01-27T06:26:46.966Z",
+                           "__v": 0
+                       },
+                       {
+                           "address": "test-1@example.com",
+                           "method": "email",
+                           "statuspage": "52e5e0e0873548543700000b",
+                           "_id": "52e5fc2d26ff40053e00000c",
+                           "granular": [
+                                "54d44a5bfc9259df1000000f_54d44a3bfc9259df10000007",
+                                "54d44a5bfc9259df1000000f_54d44a42fc9259df10000008",
+                                "54d44a36fc9259df10000005_54d3162f750e87b398000015",
+                                "54d44a52fc9259df1000000a_54d3162f750e87b398000015",
+                                "54d44a52fc9259df1000000a_54d44a47fc9259df10000009",
+                                "54d3162f750e87b398000016_54d3162f750e87b398000015"
+                           ],
+                           "active": true,
+                           "join_date": "2014-01-29T06:15:42.218Z",
+                           "__v": 0
+                       }
+                   ],
+                   "webhook": [
+                       {
+                           "address": "https://example.com/some_callback_method",
+                           "method": "webhook",
+                           "statuspage": "52e5e0e0873548543700000b",
+                           "_id": "52e5fc5d26ff40053e00000c",
+                           "granular": [],
+                           "active": true,
+                           "join_date": "2014-02-06T06:29:02.298Z",
+                           "__v": 0
+                       }
+                    ],
+                   "sms": [
+                       {
+                            "address": "+12015551717",
+                            "method": "sms",
+                            "statuspage": "52e5e0e0873548543700000b",
+                            "_id": "541552bdc3b415000000000a",
+                            "granular": [
+                                "54d44a5bfc9259df1000000f_54d44a42fc9259df10000008",
+                                "54d44a36fc9259df10000005_54d3162f750e87b398000015",
+                            ],
+                            "active": true,
+                            "join_date": "2014-09-14T08:33:01.460Z",
+                            "__v": 0
+                       }
+                    ]
+               }
+            }
+
+## Add Subscriber [/subscriber/add]
+
+Add a new subscriber
+
+### subscriber/add [POST]
+
++ statuspage_id (string, required) - Status page ID
+
++ method (string, required) - Communication method of subscriber. Valid methods are **email**, **sms** or **webhook**
+
++ address (string, required) - Subscriber address (SMS number must include country code ie. +1)
+
++ silent (string, optional) - Suppress the welcome message (1 = Do not send notification)
+
++ granular (string, optional) - List of component_container combos
+
++ Request (application/json)
+
+    + Headers
+    
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
+    + Body
+    
+            {
+            "statuspage_id": "52e5e0e0873548543700000b",
+            "method": "email",
+            "address": "another-hipster@example.com",
+            "granular":"54d44a5bfc9259df1000000f_54d44a42fc9259df10000008,54d44a36fc9259df10000005_54d3162f750e87b398000015",
+            "silent": "1"
+            }
+
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "OK"
+           },
+           "result": true,
+           "subscriber_id": "5511b3cbb066c9d14e000005"
+        }        
+        
+## Update Subscriber [/subscriber/update]
+
+Update existing subscriber
+
+### subscriber/update [PATCH]
+
++ statuspage_id (string, required) - Status page ID
+
++ subscriber_id (string, required) - Subscriber ID
+
++ address (string, optional) - Subscriber address (SMS number must include country code ie. +1)
+
++ granular (string, optional) - List of component_container combos
+
++ Request (application/json)
+
+    + Headers
+    
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
+    + Body
+    
+            {
+            "statuspage_id": "52e5e0e0873548543700000b",
+            "subscriber_id": "54bd87a0e01eb0079d000005",
+            "address": "my-new-address@example.com",
+            "granular":"54d44a5bfc9259df1000000f_54d44a42fc9259df10000008,54d44a36fc9259df10000005_54d3162f750e87b398000015"
+            }
+
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "OK"
+           },
+            "result": {
+                "_id": "54bd87a0e01eb0079d000005",
+                "address": "my-new-address@example.com",
+                "method": "email",
+                "statuspage": "52e5e0e0873548543700000b",
+                "__v": 0,
+                "granular": [
+                    "54d44a5bfc9259df1000000f_54d44a42fc9259df10000008",
+                    "54d44a36fc9259df10000005_54d3162f750e87b398000015"
+                ],
+                "active": true,
+                "join_date": "2015-09-19T22:39:28.476Z"
+            }
+        }                
+
+## Delete subscriber [/subscriber/remove/{statuspage_id}/{subscriber_id}]
+
+Delete a subscriber. All data for subscriber will be permanently removed and cannot be recovered.
+
++ Parameters
+
+    + statuspage_id (string, `52e5e0e0893548543700000b`) ... Status page ID
+
+    + subscriber_id (string, `54bd87a0e01eb0079d000005`) ... Subscriber ID
+    
+### subscriber/remove [DELETE]
+
++ statuspage_id (string, required) - Status page ID
++ subscriber_id (string, required) - Subscriber ID
+
++ Request JSON Message
+
+    + Headers
+    
+            x-api-id: YOUR-API-ID
+        
+            x-api-key: YOUR-API-KEY
+
++ Response 200 (application/json)
+
+        {
+           "status": {
+               "error": "no",
+               "message": "Successfully deleted subscriber"
+           },
+           "result": true
+        }

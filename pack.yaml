@@ -1,0 +1,14 @@
+---
+name: statusio
+description: StackStorm integration for status.io API. https://status.io/
+version: 0.0.1
+author: Carlos
+email: nzlosh@yahoo.com
+keywords:
+  - monitoring
+  - status.io
+  - saas
+contributors: []
+dependencies: []
+python_versions:
+  - "3"

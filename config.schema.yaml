@@ -1,0 +1,11 @@
+---
+  api_key:
+    description: "Your Status.io API ID."
+    type: "string"
+    secret: true
+    required: true
+  api_id:
+    description: "Your Status.io API KEY"
+    type: "string"
+    secret: false
+    required: true
